@@ -6,6 +6,7 @@ plugins {
 }
 
 description = 'Gatling Plugin for Gradle'
+version = '3.3.3'
 
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
@@ -39,7 +40,18 @@ pluginBundle {
   plugins {
     gatlingPlugin {
       displayName = 'Gatling Simulation Execution'
-      id = 'com.github.lkishalmi.gatling'
+      id = 'com.github.lkishalmi.gatling.fork'
+    }
+  }
+}
+
+publishing {
+  publications {
+    pluginPublication (MavenPublication) {
+      from    components.java
+      groupId    project.group
+      artifactId    "demo"
+      version    version
     }
   }
 }

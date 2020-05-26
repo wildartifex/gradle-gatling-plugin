@@ -17,6 +17,8 @@ class GatlingPlugin implements Plugin<Project> {
 
     public static def GATLING_RUN_TASK_NAME = 'gatlingRun'
 
+    public static def GATLING_REPORT_TASK_NAME = 'gatlingReport'
+
     static String GATLING_TASK_NAME_PREFIX = "$GATLING_RUN_TASK_NAME-"
 
     private Project project
@@ -35,18 +37,26 @@ class GatlingPlugin implements Plugin<Project> {
 
         createConfiguration(gatlingExt)
 
-        createGatlingTask(GATLING_RUN_TASK_NAME, null)
+        createGatlingReportTask(GATLING_REPORT_TASK_NAME)
+
+        createGatlingRunTask(GATLING_RUN_TASK_NAME, null)
 
         project.tasks.getByName("processGatlingResources").doLast(new LogbackConfigTaskAction())
 
         project.tasks.addRule("Pattern: $GATLING_RUN_TASK_NAME-<SimulationClass>: Executes single Gatling simulation.") { String taskName ->
             if (taskName.startsWith(GATLING_TASK_NAME_PREFIX)) {
-                createGatlingTask(taskName, (taskName - GATLING_TASK_NAME_PREFIX))
+                createGatlingRunTask(taskName, (taskName - GATLING_TASK_NAME_PREFIX))
             }
         }
     }
 
-    void createGatlingTask(String taskName, String simulationFQN = null) {
+    void createGatlingReportTask(String taskName) {
+        project.tasks.create(name: taskName,
+            dependsOn: project.tasks.gatlingClasses, type: GatlingReportTask,
+            description: "Execute Gatling report only", group: "Gatling")
+    }
+
+    void createGatlingRunTask(String taskName, String simulationFQN = null) {
         def task = project.tasks.create(name: taskName,
             dependsOn: project.tasks.gatlingClasses, type: GatlingRunTask,
             description: "Execute Gatling simulation", group: "Gatling")

@@ -3,10 +3,12 @@ package com.github.lkishalmi.gradle.gatling
 import org.gradle.api.Action
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileTree
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskExecutionException
+import org.gradle.api.tasks.options.Option
 import org.gradle.process.ExecResult
 import org.gradle.process.JavaExecSpec
 
@@ -16,6 +18,12 @@ import java.nio.file.Paths
 class GatlingRunTask extends DefaultTask implements JvmConfigurable {
 
     Closure simulations
+
+    @Option(option = 'nr', description = 'Command line argument `--no-reports` passed to the main class.')
+    Boolean noReport
+
+    @Option(option = 'ro', description = 'Command line argument `--reports-only=folder` passed to the main class. Default folder is ${project.reportsDir}/gatling')
+    String reportsOnly
 
     @OutputDirectory
     File gatlingReportDir = project.file("${project.reportsDir}/gatling")
@@ -32,9 +40,16 @@ class GatlingRunTask extends DefaultTask implements JvmConfigurable {
             it.parentFile.name == 'scala'
         }.singleFile
 
-        return ['-bf', scalaClasses.absolutePath,
-                "-rsf", "${project.sourceSets.gatling.output.resourcesDir}",
-                "-rf", gatlingReportDir.absolutePath]
+        List<String> args = ['-bf', scalaClasses.absolutePath,
+                             "-rsf", "${project.sourceSets.gatling.output.resourcesDir}",
+                             "-rf", gatlingReportDir.absolutePath]
+
+        if (this.reportsOnly)
+            args.addAll(['-ro', this.reportsOnly])
+        else if (this.noReport)
+            args.add('-nr')
+
+        return args
     }
 
     Iterable<String> simulationFilesToFQN() {
